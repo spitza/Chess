@@ -7,7 +7,7 @@ To run in your terminal:
 
 The game will then kick off a series of prompts until complete.
 
-![](images/screenshot.png | width=150)
+<img src="images/screenshot.png" width=200>
 
 To exit the game early, type `control-c`.
 
