@@ -13,7 +13,6 @@ EMPTY_VAL = " "
 class Game:
 
     def __init__(self):
-        self.active = True
         self.turn_count = 0
         self.captured_white = []
         self.captured_black = []
