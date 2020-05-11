@@ -10,6 +10,110 @@ UNICODE_PIECES = {
 
 EMPTY_VAL = " "
 
+class Piece:
+
+    def __init__(self, color):
+        self.color = color
+        self.uni = self._get_uni_val()
+        self.non_diagonal_jumps = ((-1, 0), (1, 0), (0, -1), (0, 1))
+        self.diagonal_jumps = ((-1, -1), (-1, 1), (1, -1), (1, 1))
+
+    def get_piece_type(self):
+        return type(self).__name__
+
+    def _get_uni_val(self):
+        type = self.get_piece_type()
+        uni_vals = UNICODE_PIECES[type]
+        return uni_vals[0] if self.color == "White" else uni_vals[1]
+
+    def _explore_directions(self, board, directions, valid_moves, start_row, start_col):
+        for a, b in directions:
+            i, j = start_row + a, start_col + b
+            while i >= 0 and j >= 0 and i < 8 and j < 8:
+                occupant = board[i][j]
+                if occupant != EMPTY_VAL and occupant.color != self.color:
+                    valid_moves.append((i,j))
+                    break
+                if occupant != EMPTY_VAL:
+                    break
+                valid_moves.append((i,j))
+                i += a
+                j += b
+
+    def _explore_spaces(self, board, possible_spaces, valid_moves, start_row, start_col):
+        for a, b in possible_spaces:
+            i, j = start_row + a, start_col + b
+            if i < 0 or i > 7 or j < 0 or j > 7:
+                continue
+            occupant = board[i][j]
+            if occupant != EMPTY_VAL and occupant.color != self.color:
+                valid_moves.append((i, j))
+            elif occupant == EMPTY_VAL:
+                valid_moves.append((i, j))
+
+class King(Piece):
+
+    def get_valid_moves(self, board, start_row, start_col):
+        valid_moves = []
+        possible_spaces = self.non_diagonal_jumps + self.diagonal_jumps
+        self._explore_spaces(board, possible_spaces, valid_moves, start_row, start_col)
+        return valid_moves
+
+class Queen(Piece):
+
+    def get_valid_moves(self, board, start_row, start_col):
+        valid_moves = []
+        directions = self.non_diagonal_jumps + self.diagonal_jumps
+        self._explore_directions(board, directions, valid_moves, start_row, start_col)
+        return valid_moves
+
+class Rook(Piece):
+
+    def get_valid_moves(self, board, start_row, start_col):
+        valid_moves = []
+        directions = self.non_diagonal_jumps
+        self._explore_directions(board, directions, valid_moves, start_row, start_col)
+        return valid_moves
+
+class Bishop(Piece):
+
+    def get_valid_moves(self, board, start_row, start_col):
+        valid_moves = []
+        directions = self.diagonal_jumps
+        self._explore_directions(board, directions, valid_moves, start_row, start_col)
+        return valid_moves
+
+class Knight(Piece):
+
+    def get_valid_moves(self, board, start_row, start_col):
+        valid_moves = []
+        possible_spaces = ((-2, 1), (-2, -1), (-1, 2), (1, 2), (2, 1), (2, -1), \
+            (1, -2), (-1, -2), (-2, -1))
+        self._explore_spaces(board, possible_spaces, valid_moves, start_row, start_col)
+        return valid_moves
+
+class Pawn(Piece):
+
+    def get_valid_moves(self, board, start_row, start_col):
+        valid_moves = []
+        direction = -1 if self.color == "White" else 1
+        # move a single square forward
+        i = start_row + direction
+        if 0 <= i < 8 and board[i][start_col] == EMPTY_VAL:
+            valid_moves.append((i, start_col))
+        # move two squares forward, only possible from starting position
+        if (direction == -1 and start_row == 6) or (direction == 1 and start_row == 1):
+            i = start_row + (direction * 2)
+            if board[i][start_col] == EMPTY_VAL:
+                valid_moves.append((i, start_col))
+        # diagonal attack moves
+        for col_delta in (-1, 1):
+            i, j = start_row + direction, start_col + col_delta
+            if 0 <= i < 8 and 0 <= j < 8 and board[i][j] != EMPTY_VAL and \
+                board[i][j].color != self.color:
+                valid_moves.append((i, j))
+        return valid_moves
+
 class Game:
 
     def __init__(self):
@@ -145,108 +249,5 @@ class Game:
         board[6] = white_pawns
         board[7] = white_pieces
 
-class Piece:
-
-    def __init__(self, color):
-        self.color = color
-        self.uni = self._get_uni_val()
-        self.non_diagonal_jumps = ((-1, 0), (1, 0), (0, -1), (0, 1))
-        self.diagonal_jumps = ((-1, -1), (-1, 1), (1, -1), (1, 1))
-
-    def get_piece_type(self):
-        return type(self).__name__
-
-    def _get_uni_val(self):
-        type = self.get_piece_type()
-        uni_vals = UNICODE_PIECES[type]
-        return uni_vals[0] if self.color == "White" else uni_vals[1]
-
-    def _explore_directions(self, board, directions, valid_moves, start_row, start_col):
-        for a, b in directions:
-            i, j = start_row + a, start_col + b
-            while i >= 0 and j >= 0 and i < 8 and j < 8:
-                occupant = board[i][j]
-                if occupant != EMPTY_VAL and occupant.color != self.color:
-                    valid_moves.append((i,j))
-                    break
-                if occupant != EMPTY_VAL:
-                    break
-                valid_moves.append((i,j))
-                i += a
-                j += b
-
-    def _explore_spaces(self, board, possible_spaces, valid_moves, start_row, start_col):
-        for a, b in possible_spaces:
-            i, j = start_row + a, start_col + b
-            if i < 0 or i > 7 or j < 0 or j > 7:
-                continue
-            occupant = board[i][j]
-            if occupant != EMPTY_VAL and occupant.color != self.color:
-                valid_moves.append((i, j))
-            elif occupant == EMPTY_VAL:
-                valid_moves.append((i, j))
-
-class King(Piece):
-
-    def get_valid_moves(self, board, start_row, start_col):
-        valid_moves = []
-        possible_spaces = self.non_diagonal_jumps + self.diagonal_jumps
-        self._explore_spaces(board, possible_spaces, valid_moves, start_row, start_col)
-        return valid_moves
-
-class Queen(Piece):
-
-    def get_valid_moves(self, board, start_row, start_col):
-        valid_moves = []
-        directions = self.non_diagonal_jumps + self.diagonal_jumps
-        self._explore_directions(board, directions, valid_moves, start_row, start_col)
-        return valid_moves
-
-class Rook(Piece):
-
-    def get_valid_moves(self, board, start_row, start_col):
-        valid_moves = []
-        directions = self.non_diagonal_jumps
-        self._explore_directions(board, directions, valid_moves, start_row, start_col)
-        return valid_moves
-
-class Bishop(Piece):
-
-    def get_valid_moves(self, board, start_row, start_col):
-        valid_moves = []
-        directions = self.diagonal_jumps
-        self._explore_directions(board, directions, valid_moves, start_row, start_col)
-        return valid_moves
-
-class Knight(Piece):
-
-    def get_valid_moves(self, board, start_row, start_col):
-        valid_moves = []
-        possible_spaces = ((-2, 1), (-2, -1), (-1, 2), (1, 2), (2, 1), (2, -1), \
-            (1, -2), (-1, -2), (-2, -1))
-        self._explore_spaces(board, possible_spaces, valid_moves, start_row, start_col)
-        return valid_moves
-
-class Pawn(Piece):
-
-    def get_valid_moves(self, board, start_row, start_col):
-        valid_moves = []
-        direction = -1 if self.color == "White" else 1
-        # move a single square forward
-        i = start_row + direction
-        if 0 <= i < 8 and board[i][start_col] == EMPTY_VAL:
-            valid_moves.append((i, start_col))
-        # move two squares forward, only possible from starting position
-        if (direction == -1 and start_row == 6) or (direction == 1 and start_row == 1):
-            i = start_row + (direction * 2)
-            if board[i][start_col] == EMPTY_VAL:
-                valid_moves.append((i, start_col))
-        # diagonal attack moves
-        for col_delta in (-1, 1):
-            i, j = start_row + direction, start_col + col_delta
-            if 0 <= i < 8 and 0 <= j < 8 and board[i][j] != EMPTY_VAL and \
-                board[i][j].color != self.color:
-                valid_moves.append((i, j))
-        return valid_moves
 
 Game()
