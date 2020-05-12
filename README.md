@@ -8,6 +8,9 @@ The game will then kick off a series of prompts until complete.
 
 <img src="images/screenshot.png" width=500>
 
+Oddly, the fully white pieces (top of the board) are "Black" pieces in unicode.
+The pieces that have no fill (bottom of the board) are "White".
+
 To exit the game early, type `control-c`.
 
 Copyright 2020 Phil Spitzer
