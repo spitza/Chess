@@ -14,14 +14,14 @@ class Piece:
 
     def __init__(self, color):
         self.color = color
-        self.uni = self._get_uni_val()
+        self.uni = self._get_unicode_val()
         self.non_diagonal_jumps = ((-1, 0), (1, 0), (0, -1), (0, 1))
         self.diagonal_jumps = ((-1, -1), (-1, 1), (1, -1), (1, 1))
 
     def get_piece_type(self):
         return type(self).__name__
 
-    def _get_uni_val(self):
+    def _get_unicode_val(self):
         type = self.get_piece_type()
         uni_vals = UNICODE_PIECES[type]
         return uni_vals[0] if self.color == "White" else uni_vals[1]
