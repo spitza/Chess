@@ -8,22 +8,19 @@ UNICODE_PIECES = {
     # it from being emojified.
 }
 
-EMPTY_VAL = " "
+EMPTY_SQUARE = " "
 
 class Piece:
 
     def __init__(self, color):
         self.color = color
+        self.type_name = type(self).__name__
         self.uni = self._get_unicode_val()
         self.non_diagonal_jumps = ((-1, 0), (1, 0), (0, -1), (0, 1))
         self.diagonal_jumps = ((-1, -1), (-1, 1), (1, -1), (1, 1))
 
-    def get_piece_type(self):
-        return type(self).__name__
-
     def _get_unicode_val(self):
-        type = self.get_piece_type()
-        uni_vals = UNICODE_PIECES[type]
+        uni_vals = UNICODE_PIECES[self.type_name]
         return uni_vals[0] if self.color == "White" else uni_vals[1]
 
     def _explore_directions(self, board, directions, valid_moves, start_row, start_col):
@@ -31,10 +28,10 @@ class Piece:
             i, j = start_row + a, start_col + b
             while i >= 0 and j >= 0 and i < 8 and j < 8:
                 occupant = board[i][j]
-                if occupant != EMPTY_VAL and occupant.color != self.color:
+                if occupant != EMPTY_SQUARE and occupant.color != self.color:
                     valid_moves.append((i,j))
                     break
-                if occupant != EMPTY_VAL:
+                if occupant != EMPTY_SQUARE:
                     break
                 valid_moves.append((i,j))
                 i += a
@@ -46,9 +43,9 @@ class Piece:
             if i < 0 or i > 7 or j < 0 or j > 7:
                 continue
             occupant = board[i][j]
-            if occupant != EMPTY_VAL and occupant.color != self.color:
+            if occupant != EMPTY_SQUARE and occupant.color != self.color:
                 valid_moves.append((i, j))
-            elif occupant == EMPTY_VAL:
+            elif occupant == EMPTY_SQUARE:
                 valid_moves.append((i, j))
 
 class King(Piece):
@@ -99,17 +96,17 @@ class Pawn(Piece):
         direction = -1 if self.color == "White" else 1
         # move a single square forward
         i = start_row + direction
-        if 0 <= i < 8 and board[i][start_col] == EMPTY_VAL:
+        if 0 <= i < 8 and board[i][start_col] == EMPTY_SQUARE:
             valid_moves.append((i, start_col))
         # move two squares forward, only possible from starting position
         if (direction == -1 and start_row == 6) or (direction == 1 and start_row == 1):
             i = start_row + (direction * 2)
-            if board[i][start_col] == EMPTY_VAL:
+            if board[i][start_col] == EMPTY_SQUARE:
                 valid_moves.append((i, start_col))
         # diagonal attack moves
         for col_delta in (-1, 1):
             i, j = start_row + direction, start_col + col_delta
-            if 0 <= i < 8 and 0 <= j < 8 and board[i][j] != EMPTY_VAL and \
+            if 0 <= i < 8 and 0 <= j < 8 and board[i][j] != EMPTY_SQUARE and \
                 board[i][j].color != self.color:
                 valid_moves.append((i, j))
         return valid_moves
@@ -120,7 +117,7 @@ class Game:
         self.turn_count = 0
         self.captured_white = []
         self.captured_black = []
-        self.board = [[EMPTY_VAL] * 8 for _ in range(8)]
+        self.board = [[EMPTY_SQUARE] * 8 for _ in range(8)]
         self._set_board()
         self._print_board()
         self._prompt_for_start()
@@ -135,18 +132,17 @@ class Game:
             return self._prompt_for_start()
         start_row, start_col = start_coordinates
         piece = self.board[start_row][start_col]
-        if piece == EMPTY_VAL or piece.color != turn:
+        if piece == EMPTY_SQUARE or piece.color != turn:
             print("Invalid input. Choose a square with a {} piece.".format(turn))
             return self._prompt_for_start()
         valid_moves = piece.get_valid_moves(self.board, start_row, start_col)
         if not valid_moves:
-            type = piece.get_piece_type()
-            print("That {} can't move anywhere.".format(type))
+            print("That {} can't move anywhere.".format(piece.type_name))
             return self._prompt_for_start()
         self._prompt_for_dest(start_row, start_col, piece, valid_moves)
 
     def _prompt_for_dest(self, start_row, start_col, piece, valid_moves):
-        type = piece.get_piece_type()
+        type = piece.type_name
         end_input_prompt = "Where would you like to move this {}?: ".format(type)
         end_input = input(end_input_prompt)
         end_coordinates = self._parse_coordinates(end_input)
@@ -170,10 +166,10 @@ class Game:
 
     def _move_piece(self, start_row, start_col, end_row, end_col, piece):
         board = self.board
-        board[start_row][start_col] = EMPTY_VAL
+        board[start_row][start_col] = EMPTY_SQUARE
         end_occupant = board[end_row][end_col]
-        if end_occupant != EMPTY_VAL:
-            if end_occupant.get_piece_type() == "King":
+        if end_occupant != EMPTY_SQUARE:
+            if end_occupant.type_name == "King":
                 print("Game Over, {} wins!".format(piece.color))
                 return
             self._capture_piece(end_occupant)
@@ -184,14 +180,14 @@ class Game:
         self._prompt_for_start()
 
     def _pawn_swap_check(self, end_row, end_col, piece):
-        if piece.get_piece_type() != "Pawn" or 1 <= end_row <= 6:
+        if piece.type_name != "Pawn" or 1 <= end_row <= 6:
             return
         captured = self.captured_white if piece.color == "White" else \
             self.captured_black
         if not captured:
             print("No captured pieces to swap with your pawn.")
             return
-        captured_types = [piece.get_piece_type() for piece in captured]
+        captured_types = [piece.type_name for piece in captured]
         print("Available Pieces to Swap:")
         for k, v in enumerate(captured_types):
             print("{}: {}".format(k, v))
@@ -219,7 +215,7 @@ class Game:
         print(" ")
         separator = "   |   "
         starting_separator = "  |   "
-        space_and_lines = starting_separator + separator.join([EMPTY_VAL] * 8) + "   |"
+        space_and_lines = starting_separator + separator.join([EMPTY_SQUARE] * 8) + "   |"
         horizontal_line = "  " + ("-" * 65)
         print(horizontal_line)
         for row in range(0,8):
@@ -228,7 +224,7 @@ class Game:
             coordinates_row = "  "
             for col in range(0,8):
                 occupant = self.board[row][col]
-                label_row.append(occupant.uni if occupant != EMPTY_VAL else EMPTY_VAL)
+                label_row.append(occupant.uni if occupant != EMPTY_SQUARE else EMPTY_SQUARE)
                 coordinates_row += "|" + str(row) + str(col) + "     "
             print(starting_separator + separator.join(label_row) + "   |")
             print(coordinates_row + "|")
