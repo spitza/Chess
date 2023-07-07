@@ -4,8 +4,8 @@ UNICODE_PIECES = {
     "Rook": ["\u2656", "\u265C"],
     "Bishop": ["\u2657", "\u265D"],
     "Knight": ["\u2658", "\u265E"],
-    "Pawn": ["\u2659", "\u265F\uFE0E"] # uFE0E added for black pawn to prevent
-    # it from being emojified.
+    # uFE0E added for black pawn to prevent it from being emojified.
+    "Pawn": ["\u2659", "\u265F\uFE0E"] 
 }
 
 EMPTY_SQUARE = " "
@@ -23,6 +23,8 @@ class Piece:
         uni_vals = UNICODE_PIECES[self.type_name]
         return uni_vals[0] if self.color == "White" else uni_vals[1]
 
+    # Used to populate valid_moves for a piece at a moment in time.
+    # Explore linearly in directions until you hit a piece or a board edge
     def _explore_directions(self, board, directions, valid_moves, start_row, start_col):
         for a, b in directions:
             i, j = start_row + a, start_col + b
@@ -37,6 +39,8 @@ class Piece:
                 i += a
                 j += b
 
+    # Used to populate valid_moves for a piece at a moment in time.
+    # Explore a predefined set of possible spaces for a piece
     def _explore_spaces(self, board, possible_spaces, valid_moves, start_row, start_col):
         for a, b in possible_spaces:
             i, j = start_row + a, start_col + b
